@@ -1,8 +1,8 @@
 import numpy as np
 from tqdm import tqdm
-from . import operators
+from v1diffusion import operators
 
-def evolve_hypoelliptic(u0, T, dt=0.1, beta=0.5, model=0, progress=True):
+def parallel_diffusion(u0, T, dt=0.1, beta=0.5, model=0, progress=True):
     """
     Hypoelliptic evolution in PTR2 according to Boscain-2016
     
@@ -28,7 +28,19 @@ def evolve_hypoelliptic(u0, T, dt=0.1, beta=0.5, model=0, progress=True):
     
     return np.asarray(u1)
 
-def regress_hypoelliptic(u0, T, dt=0.1, beta=0.5, model=0, progress=True):
+
+def orthogonal_diffusion(u0, T, dt=0.1, beta=0.5, model=0, progress=True):
+    u1 = u0.copy() #Initialization of u1 in case the loop is not ran
+
+    t=0
+    for step in tqdm(range(0, int(T/dt)), disable=(not progress)):
+        u1 = u1+dt*operators.orthogonal_operator(u1, beta, model)
+        t+=dt
+    
+    return u1
+
+
+def parallel_concentration(u0, T, dt=0.01, beta=0.5, model=0, progress=True):
     """
     Handler function to regress the hypoelliptic evolution with negative dt
     """
@@ -41,15 +53,33 @@ def regress_hypoelliptic(u0, T, dt=0.1, beta=0.5, model=0, progress=True):
     
     return np.asarray(u1)
 
-def orthogonal_evolution(u0, T, dt=0.1, beta=0.5, model=0, progress=True):
-    u1 = u0.copy() #Initialization of u1 in case the loop is not ran
+
+def orthogonal_concentration(u0, T, dt=0.01, beta=0.5, model=0, progress=True):
+    """
+    Handler function to regress the hypoelliptic evolution with negative dt
+    """
+    u1 = u0 #Initialization of u1 in case the loop is not ran
 
     t=0
     for step in tqdm(range(0, int(T/dt)), disable=(not progress)):
-        u1 = u1+dt*operators.hypoelliptic_heat_operator(u1, beta, model)
+        u1 = u1-dt*operators.orthogonal_operator(u1, beta, model)
         t+=dt
     
-    return u1
+    return np.asarray(u1)
+
+
+def v1_unsharp_filter(u, C=1, T=1, beta=1, model=0):
+    """
+    Applies the unsharp filter as described in Ballerin-Grong-23
+
+
+    u: image in PTR2/SE2
+    T: final time
+    beta: weight coefficient
+    """
+    u2 = orthogonal_concentration(u, T, beta=beta, model=model)
+    return u-C*(u-u2)
+
 
 def evolve_vc_hypoelliptic(u0, img, T, a0=1, b0=1, a1=1, b1=1, sigma=1,
  epss=0.1, dt=0.1, progress=True):

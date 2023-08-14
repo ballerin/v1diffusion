@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from . import utils
+from v1diffusion import utils
 
 EPS = 0.0001
 

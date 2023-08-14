@@ -1,8 +1,8 @@
 #import numpy as np
+from functools import partial
 import jax.numpy as jnp
 from jax import grad, jit, vmap
 from jax import random
-from functools import partial
 
 @partial(jit, static_argnames=['n','model','order'])
 def dX1(u, n=1, model=0, order=2):
@@ -118,13 +118,21 @@ def hypoelliptic_heat_operator(u, beta=1, model=0):
     u: image in PTR2
     beta: weight coefficient
     """
-    model = 0
 
-    return dX1(u,n=2, model=model, order=2)+beta**2*dX2(u,n=2, model=model)
+    return dX1(u,n=2, model=model, order=2) + beta**2 * dX2(u, n=2, model=model)
 
 @partial(jit, static_argnames=['beta','model'])
 def orthogonal_operator(u, beta=1, model=0):
-    return dX3(u,n=2,model=model)+beta**2*dX2(u,n=2,model=model)
+    """
+    Applies the hypoelliptic heat operator X_3^2 + \beta X_2^2 to a lifted image
+    in PTR2. This is the orthogonal wrt to the level lines
+
+
+    u: image in PTR2
+    beta: weight coefficient
+    """
+
+    return dX3(u,n=2, model=model, order=2) + beta**2 * dX2(u, n=2, model=model)
 
 @jit
 def vc_hypoelliptic_heat_operator(u, a, b):

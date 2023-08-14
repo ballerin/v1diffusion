@@ -1,8 +1,8 @@
 from cv2 import STEREO_SGBM_MODE_HH
 import numpy as np
-from . import utils
-from . import transforms
-from . import evolution
+from v1diffusion import utils
+from v1diffusion import transforms
+from v1diffusion import evolution
 
 def AHE(img, mask, T1, T2=0.5, a0=1, b0=1, a1=1, b1=1, sigma=1, epss=0.1, dt1=0.1, dt2=0.1, progress=True):
     """
